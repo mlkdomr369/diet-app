@@ -99,7 +99,7 @@
                     
                     <div id="food-items-list" class="space-y-2 mb-4 text-sm text-gray-600"></div>
                     
-                    <div id="food-feedback-box" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 mb-4 leading-relaxed font-medium">
+                    <div id="food-feedback-box" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 mb-4 leading-relaxed font-medium mt-2">
                     </div>
                     
                     <div id="food-total-section" class="hidden border-t pt-3 font-bold text-sm text-gray-800 bg-gray-50 p-3 rounded-lg">
@@ -180,11 +180,16 @@
     let current = { cal: 0, carb: 0, prot: 0, fat: 0 };
     let pendingFood = null;
 
-    function calculateGoals() {
+    function calculateGoals(showAlert = true) {
         const gender = document.getElementById('gender').value;
         const age = parseInt(document.getElementById('age').value);
         const height = parseInt(document.getElementById('height').value);
         const weight = parseInt(document.getElementById('weight').value);
+
+        localStorage.setItem("user_gender", gender);
+        localStorage.setItem("user_age", age);
+        localStorage.setItem("user_height", height);
+        localStorage.setItem("user_weight", weight);
 
         let bmr = (10 * weight) + (6.25 * height) - (5 * age);
         bmr += (gender === 'male') ? 5 : -161;
@@ -197,7 +202,19 @@
         goals.fat = Math.round((tdee * 0.2) / 9);
 
         updateUI();
-        alert(`일일 권장 목표가 설정되었습니다!\n목표 칼로리: ${goals.cal}kcal`);
+        if (showAlert) {
+            alert(`일일 권장 목표가 설정되었습니다!\n목표 칼로리: ${goals.cal}kcal`);
+        }
+    }
+
+    function loadSavedPhysicalInfo() {
+        if (localStorage.getItem("user_age")) {
+            document.getElementById('gender').value = localStorage.getItem("user_gender");
+            document.getElementById('age').value = localStorage.getItem("user_age");
+            document.getElementById('height').value = localStorage.getItem("user_height");
+            document.getElementById('weight').value = localStorage.getItem("user_weight");
+            calculateGoals(false);
+        }
     }
 
     function updateUI() {
@@ -405,6 +422,7 @@
         location.href = "index.html";
     }
 
+    loadSavedPhysicalInfo();
     loadHistory();
 </script>
 
