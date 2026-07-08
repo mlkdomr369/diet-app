@@ -42,8 +42,8 @@
                         <input type="number" id="weight" value="70" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
-                <button onclick="calculateGoals()" class="w-full bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-700 transition">
-                    목표 계산하기
+                <button onclick="saveAndCalculateGoals()" class="w-full bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-700 transition">
+                    목표 계산 및 DB 저장
                 </button>
             </section>
 
@@ -180,17 +180,7 @@
     let current = { cal: 0, carb: 0, prot: 0, fat: 0 };
     let pendingFood = null;
 
-    function calculateGoals(showAlert = true) {
-        const gender = document.getElementById('gender').value;
-        const age = parseInt(document.getElementById('age').value);
-        const height = parseInt(document.getElementById('height').value);
-        const weight = parseInt(document.getElementById('weight').value);
-
-        localStorage.setItem("user_gender", gender);
-        localStorage.setItem("user_age", age);
-        localStorage.setItem("user_height", height);
-        localStorage.setItem("user_weight", weight);
-
+    function calculateLocalGoals(gender, age, height, weight) {
         let bmr = (10 * weight) + (6.25 * height) - (5 * age);
         bmr += (gender === 'male') ? 5 : -161;
 
@@ -202,18 +192,49 @@
         goals.fat = Math.round((tdee * 0.2) / 9);
 
         updateUI();
-        if (showAlert) {
-            alert(`일일 권장 목표가 설정되었습니다!\n목표 칼로리: ${goals.cal}kcal`);
+    }
+
+    async function saveAndCalculateGoals() {
+        const gender = document.getElementById('gender').value;
+        const age = parseInt(document.getElementById('age').value);
+        const height = parseInt(document.getElementById('height').value);
+        const weight = parseInt(document.getElementById('weight').value);
+
+        try {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/user/physical-info", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ gender, age, height, weight })
+            });
+
+            if (!response.ok) throw new Error();
+
+            calculateLocalGoals(gender, age, height, weight);
+            alert("신체 정보가 원격 DB에 영구 저장되었으며 일일 목표가 갱신되었습니다!");
+        } catch (error) {
+            alert("DB 저장에 실패했습니다.");
         }
     }
 
-    function loadSavedPhysicalInfo() {
-        if (localStorage.getItem("user_age")) {
-            document.getElementById('gender').value = localStorage.getItem("user_gender");
-            document.getElementById('age').value = localStorage.getItem("user_age");
-            document.getElementById('height').value = localStorage.getItem("user_height");
-            document.getElementById('weight').value = localStorage.getItem("user_weight");
-            calculateGoals(false);
+    async function loadSavedPhysicalInfo() {
+        try {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/user/physical-info", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error();
+            const data = await response.json();
+
+            document.getElementById('gender').value = data.gender;
+            document.getElementById('age').value = data.age;
+            document.getElementById('height').value = data.height;
+            document.getElementById('weight').value = data.weight;
+
+            calculateLocalGoals(data.gender, data.age, data.height, data.weight);
+        } catch (error) {
+            console.error(error);
         }
     }
 
