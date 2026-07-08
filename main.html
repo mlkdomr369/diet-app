@@ -215,7 +215,7 @@
 
     async function loadHistory() {
         try {
-            const response = await fetch("http://172.16.145.17:8000/api/logs", {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/logs", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (!response.ok) throw new Error();
@@ -248,7 +248,7 @@
                             <span class="font-bold text-blue-600">${log.cal} kcal</span>
                         </div>
                         <div class="flex gap-3">
-                            <img src="http://172.16.145.17:8000/static-images/${log.image_filename}" class="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0">
+                            <img src="https://sri-residence-discrimination-california.trycloudflare.com/static-images/${log.image_filename}" class="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0">
                             <div class="space-y-1 min-w-0 flex-1">
                                 <p class="text-xs font-bold text-gray-700 truncate">📍 ${itemsNames}</p>
                                 <p class="text-[11px] text-gray-500">탄 ${log.carb}g | 단 ${log.prot}g | 지 ${log.fat}g</p>
@@ -292,7 +292,7 @@
         formData.append("file", file);
 
         try {
-            const response = await fetch("http://172.16.145.17:8000/api/analyze-food", {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/analyze-food", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -333,7 +333,7 @@
         if (!pendingFood || !pendingFood.total) return;
         
         try {
-            const response = await fetch("http://172.16.145.17:8000/api/logs", {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/logs", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -377,7 +377,7 @@
         if (!current_password || !new_password) return alert("비밀번호를 모두 입력하세요.");
 
         try {
-            const response = await fetch("http://172.16.145.17:8000/api/user/change-password", {
+            const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/user/change-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
