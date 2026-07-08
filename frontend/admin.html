@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>식단 앱 시스템 관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <div class="flex">
+        <aside class="w-64 bg-gray-800 min-h-screen p-6 shadow-xl">
+            <h1 class="text-xl font-bold text-blue-400 mb-8 tracking-wider">CORE IT 안심제어</h1>
+            <nav class="space-y-2">
+                <a href="#" class="block px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium">사용자 계정 관리</a>
+                <button onclick="logout()" class="w-full text-left block px-4 py-2.5 text-gray-400 hover:bg-gray-700 hover:text-white rounded-lg font-medium transition">시스템 로그아웃</button>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-8 space-y-8">
+            <header class="flex justify-between items-center border-b border-gray-700 pb-4">
+                <h2 class="text-2xl font-bold">Gemini API 할당 및 회원 관리</h2>
+                <div class="text-sm text-gray-400" id="admin-greeting">관리자 세션 활성화됨</div>
+            </header>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-4">신규 사용자 등록 및 API 키 맵핑</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">사용자 계정 ID</label>
+                            <input type="text" id="new-username" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">사용자 이름 (실명/닉네임)</label>
+                            <input type="text" id="new-name" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">초기 접속 비밀번호</label>
+                            <input type="password" id="new-password" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase">전용 Gemini API Key 할당</label>
+                            <input type="text" id="new-apikey" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button onclick="createUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg font-medium transition shadow-md">계정 생성 및 API 바인딩</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-red-400 mb-4">최고 관리자 비밀번호 변경</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1 uppercase">현재 비밀번호</label>
+                                <input type="password" id="admin-current-password" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-red-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1 uppercase">새로운 비밀번호</label>
+                                <input type="password" id="admin-new-password" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-red-500">
+                            </div>
+                            <button onclick="changeAdminPassword()" class="w-full bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-lg font-medium transition shadow-md">비밀번호 변경 적용</button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600 mt-4">
+                        <div class="text-xs text-gray-400 mb-1">인증 방식</div>
+                        <div class="text-sm font-mono text-green-400">JWT Bearer Token Authed</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-200">시스템 등록 사용자 아카이브</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-700/50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-700">
+                                <th class="p-4">사용자 ID</th>
+                                <th class="p-4">사용자 이름</th>
+                                <th class="p-4">유형 등급</th>
+                                <th class="p-4">연동된 API KEY 바인딩 상태</th>
+                                <th class="p-4 text-center">동작 제어</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body" class="divide-y divide-gray-700 text-sm text-gray-300">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("admin_token");
+        if (!token) {
+            alert("관리자 권한이 필요합니다. 로그인 페이지로 이동합니다.");
+            location.href = "index.html";
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch("http://172.16.145.17:8000/api/admin/users", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error("데이터 수집 실패");
+                const users = await response.json();
+                
+                const tbody = document.getElementById("user-table-body");
+                tbody.innerHTML = "";
+                
+                users.forEach(user => {
+                    const maskedKey = user.api_key.length > 15 ? `${user.api_key.substring(0, 8)}...${user.api_key.substring(user.api_key.length - 4)}` : user.api_key;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-700/30 transition">
+                            <td class="p-4 font-medium text-white">${user.username}</td>
+                            <td class="p-4 text-gray-400">${user.name}</td>
+                            <td class="p-4">${user.is_admin ? '<span class="px-2 py-1 bg-red-900/50 text-red-400 border border-red-700 rounded text-xs font-bold">SYSTEM ADMIN</span>' : '<span class="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">END USER</span>'}</td>
+                            <td class="p-4 font-mono text-xs text-gray-400">${maskedKey}</td>
+                            <td class="p-4 text-center">
+                                ${user.username === 'admin' ? '<span class="text-xs text-gray-500">제외 대상</span>' : `<button onclick="deleteUser('${user.username}')" class="px-3 py-1 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded border border-red-500/30 text-xs font-medium transition">영구 삭제</button>`}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function createUser() {
+            const username = document.getElementById("new-username").value;
+            const name = document.getElementById("new-name").value;
+            const password = document.getElementById("new-password").value;
+            const api_key = document.getElementById("new-apikey").value;
+
+            if (!username || !name || !password || !api_key) return alert("모든 항목을 입력하세요.");
+
+            try {
+                const response = await fetch("http://172.16.145.17:8000/api/admin/users", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ username, name, password, api_key })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail);
+                }
+
+                alert("계정이 성공적으로 바인딩되었습니다.");
+                document.getElementById("new-username").value = "";
+                document.getElementById("new-name").value = "";
+                document.getElementById("new-password").value = "";
+                document.getElementById("new-apikey").value = "";
+                loadUsers();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`${username} 계정을 원격 저장소에서 영구 제거하시겠습니까?`)) return;
+
+            try {
+                const response = await fetch(`http://172.16.145.17:8000/api/admin/users/${username}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("제거 작업 중 오류 발생");
+                loadUsers();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function changeAdminPassword() {
+            const current_password = document.getElementById("admin-current-password").value;
+            const new_password = document.getElementById("admin-new-password").value;
+
+            if (!current_password || !new_password) return alert("비밀번호를 모두 입력하세요.");
+
+            try {
+                const response = await fetch("http://172.16.145.17:8000/api/admin/change-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ current_password, new_password })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail);
+                }
+
+                alert("관리자 암호가 성공적으로 변경되었습니다.");
+                document.getElementById("admin-current-password").value = "";
+                document.getElementById("admin-new-password").value = "";
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.href = "index.html";
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

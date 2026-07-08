@@ -1,0 +1,16 @@
+# venv 가상환경 제외
+backend/venv/
+.venv/
+
+# 데이터베이스 파일 제외
+backend/diet.db
+*.db
+
+# 파이썬 캐시 파일 제외
+**/__pycache__/
+*.pyc
+
+# 운영체제 및 에디터 임시 파일
+.DS_Store
+.vscode/
+.idea/

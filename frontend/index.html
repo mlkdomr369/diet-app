@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+    <div class="max-w-md w-full bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-white tracking-wide">TEST PAGE</h1>
+            <p class="text-sm text-gray-400 mt-1">인프라 시스템 인증</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase">계정 ID</label>
+                <input type="text" id="username" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1 uppercase">비밀번호</label>
+                <input type="password" id="password" class="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg font-medium transition shadow-md">시스템 접속</button>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (!username || !password) return alert("아이디와 비밀번호를 입력하세요.");
+
+            try {
+                const response = await fetch("http://172.16.145.17:8000/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail);
+                }
+
+                const data = await response.json();
+                localStorage.setItem("user_name", data.name);
+
+                if (data.is_admin) {
+                    localStorage.setItem("admin_token", data.token);
+                    location.href = "admin.html";
+                } else {
+                    localStorage.setItem("user_token", data.token);
+                    location.href = "main.html";
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+    </script>
+</body>
+</html>

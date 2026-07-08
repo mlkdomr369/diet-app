@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 식단 관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-10">
+
+<div class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col justify-between">
+    <div>
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">AI 식단 매니저</h1>
+            <button onclick="logout()" class="text-xs bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-lg transition">로그아웃</button>
+        </header>
+
+        <main class="p-4 space-y-6">
+            <div id="time-greeting" class="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-sm font-semibold text-center text-sm tracking-wide">
+            </div>
+
+            <section class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h2 class="text-lg font-semibold mb-3">내 신체 정보</h2>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">성별</label>
+                        <select id="gender" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="male">남성</option>
+                            <option value="female">여성</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">나이 (만)</label>
+                        <input type="number" id="age" value="25" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">키 (cm)</label>
+                        <input type="number" id="height" value="175" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">몸무게 (kg)</label>
+                        <input type="number" id="weight" value="70" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button onclick="calculateGoals()" class="w-full bg-gray-800 text-white p-2 rounded-lg font-medium hover:bg-gray-700 transition">
+                    목표 계산하기
+                </button>
+            </section>
+
+            <section class="p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <h2 class="text-lg font-semibold mb-4 text-center">오늘의 목표</h2>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="font-medium">칼로리</span>
+                        <span id="cal-text">0 / 0 kcal</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="cal-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-center mb-2">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">탄수화물</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                            <div id="carb-bar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <div id="carb-text" class="text-xs font-medium">0/0g</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">단백질</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                            <div id="prot-bar" class="bg-red-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <div id="prot-text" class="text-xs font-medium">0/0g</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">지방</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                            <div id="fat-bar" class="bg-yellow-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <div id="fat-text" class="text-xs font-medium">0/0g</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                <h2 class="text-lg font-semibold mb-2">음식 기록하기</h2>
+                <p class="text-sm text-gray-600 mb-4">Gemini Vision API로 식단을 분석합니다.</p>
+                
+                <input type="file" id="foodImage" accept="image/*" class="hidden" onchange="handleImageUpload()">
+                <label for="foodImage" class="cursor-pointer inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition w-full shadow-md">
+                    📸 사진 촬영 / 업로드
+                </label>
+                
+                <div id="analysis-result" class="mt-4 hidden bg-white p-4 rounded-lg border border-gray-200 text-left shadow-sm">
+                    <p id="analysis-status" class="font-bold text-blue-700 border-b pb-2 mb-2">AI 식단 분석 결과</p>
+                    
+                    <div id="food-items-list" class="space-y-2 mb-4 text-sm text-gray-600"></div>
+                    
+                    <div id="food-feedback-box" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 mb-4 leading-relaxed font-medium">
+                    </div>
+                    
+                    <div id="food-total-section" class="hidden border-t pt-3 font-bold text-sm text-gray-800 bg-gray-50 p-3 rounded-lg">
+                        <p class="text-blue-800 mb-2 text-xs uppercase tracking-wider">📊 메뉴 전체 도합</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <p>🔥 <span id="food-cal">0</span> kcal</p>
+                            <p>🍚 탄: <span id="food-carb">0</span>g</p>
+                            <p>🥩 단: <span id="food-prot">0</span>g</p>
+                            <p>🥑 지: <span id="food-fat">0</span>g</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="addFoodToTotal()" class="mt-4 w-full bg-gray-800 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+                        식단에 추가하기
+                    </button>
+                </div>
+            </section>
+
+            <section class="border border-gray-200 rounded-xl bg-white p-4 shadow-sm">
+                <h2 class="text-base font-bold text-gray-800 mb-4 flex items-center">
+                    <span>📅 일별 식단 로그 히스토리</span>
+                </h2>
+                <div id="history-container" class="space-y-4">
+                </div>
+            </section>
+
+            <section class="border border-gray-200 rounded-xl bg-white p-4 shadow-sm">
+                <button onclick="togglePasswordPanel()" class="w-full flex justify-between items-center text-sm font-medium text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <span>🔒 비밀번호 변경</span>
+                    <span id="panel-arrow">▼</span>
+                </button>
+                
+                <div id="password-panel" class="hidden mt-4 space-y-3 pt-3 border-t border-gray-100">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">현재 비밀번호</label>
+                        <input type="password" id="user-current-password" class="w-full p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">새로운 비밀번호</label>
+                        <input type="password" id="user-new-password" class="w-full p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="changeUserPassword()" class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-medium transition">
+                        비밀번호 업데이트 적용
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem("user_token");
+    const userName = localStorage.getItem("user_name") || "회원";
+    if (!token) {
+        alert("로그인이 필요한 서비스입니다.");
+        location.href = "index.html";
+    }
+
+    function setGreeting() {
+        const hour = new Date().getHours();
+        let greetText = "";
+        if (hour >= 5 && hour < 11) {
+            greetText = `☀️ ${userName}님! 활기찬 아침입니다. 아침 식사 챙겨 드세요!`;
+        } else if (hour >= 11 && hour < 14) {
+            greetText = `🍱 ${userName}님! 맛있는 점심 식사 하세요!`;
+        } else if (hour >= 14 && hour < 17) {
+            greetText = `☕ ${userName}님! 나른한 오후네요. 오늘도 파이팅입니다!`;
+        } else if (hour >= 17 && hour < 21) {
+            greetText = `🌙 ${userName}님! 행복한 저녁 시간 되세요!`;
+        } else {
+            greetText = `✨ ${userName}님! 오늘 하루도 정말 수고 많으셨습니다!`;
+        }
+        document.getElementById("time-greeting").innerText = greetText;
+    }
+    setGreeting();
+
+    let goals = { cal: 0, carb: 0, prot: 0, fat: 0 };
+    let current = { cal: 0, carb: 0, prot: 0, fat: 0 };
+    let pendingFood = null;
+
+    function calculateGoals() {
+        const gender = document.getElementById('gender').value;
+        const age = parseInt(document.getElementById('age').value);
+        const height = parseInt(document.getElementById('height').value);
+        const weight = parseInt(document.getElementById('weight').value);
+
+        let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+        bmr += (gender === 'male') ? 5 : -161;
+
+        const tdee = Math.round(bmr * 1.375); 
+
+        goals.cal = tdee;
+        goals.carb = Math.round((tdee * 0.5) / 4);
+        goals.prot = Math.round((tdee * 0.3) / 4);
+        goals.fat = Math.round((tdee * 0.2) / 9);
+
+        updateUI();
+        alert(`일일 권장 목표가 설정되었습니다!\n목표 칼로리: ${goals.cal}kcal`);
+    }
+
+    function updateUI() {
+        const updateBar = (id, cur, max) => {
+            const percent = max > 0 ? Math.min((cur / max) * 100, 100) : 0;
+            document.getElementById(`${id}-bar`).style.width = `${percent}%`;
+            document.getElementById(`${id}-text`).innerText = `${cur}/${max}${id === 'cal' ? ' kcal' : 'g'}`;
+        };
+
+        updateBar('cal', current.cal, goals.cal);
+        updateBar('carb', current.carb, goals.carb);
+        updateBar('prot', current.prot, goals.prot);
+        updateBar('fat', current.fat, goals.fat);
+    }
+
+    async function loadHistory() {
+        try {
+            const response = await fetch("http://172.16.145.17:8000/api/logs", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error();
+            const logs = await response.json();
+            
+            const container = document.getElementById("history-container");
+            container.innerHTML = "";
+            
+            if(logs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">저장된 식단 로그가 없습니다.</p>`;
+                return;
+            }
+
+            let todayCal = 0, todayCarb = 0, todayProt = 0, todayFat = 0;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            logs.forEach(log => {
+                if(log.date === todayStr) {
+                    todayCal += log.cal;
+                    todayCarb += log.carb;
+                    todayProt += log.prot;
+                    todayFat += log.fat;
+                }
+
+                let itemsNames = log.items.map(i => i.name).join(", ");
+                container.innerHTML += `
+                    <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center border-b border-gray-200 pb-1.5 text-xs text-gray-500">
+                            <span>📅 ${log.date} ${log.timestamp}</span>
+                            <span class="font-bold text-blue-600">${log.cal} kcal</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <img src="http://172.16.145.17:8000/static-images/${log.image_filename}" class="w-16 h-16 object-cover rounded-lg border border-gray-200 shrink-0">
+                            <div class="space-y-1 min-w-0 flex-1">
+                                <p class="text-xs font-bold text-gray-700 truncate">📍 ${itemsNames}</p>
+                                <p class="text-[11px] text-gray-500">탄 ${log.carb}g | 단 ${log.prot}g | 지 ${log.fat}g</p>
+                                <p class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100 font-medium leading-tight">💬 ${log.feedback}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            current.cal = todayCal;
+            current.carb = todayCarb;
+            current.prot = todayProt;
+            current.fat = todayFat;
+            updateUI();
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function handleImageUpload() {
+        const fileInput = document.getElementById('foodImage');
+        const file = fileInput.files[0];
+        
+        if (!file) return;
+
+        const resultDiv = document.getElementById('analysis-result');
+        const statusP = document.getElementById('analysis-status');
+        const itemsList = document.getElementById('food-items-list');
+        const feedbackBox = document.getElementById('food-feedback-box');
+        const totalSection = document.getElementById('food-total-section');
+
+        resultDiv.classList.remove('hidden');
+        totalSection.classList.add('hidden');
+        feedbackBox.classList.add('hidden');
+        itemsList.innerHTML = '';
+        statusP.innerText = "Gemini가 메뉴별 분석 및 영양 강평을 작성 중입니다... ⏳";
+        
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("http://172.16.145.17:8000/api/analyze-food", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("서버 응답 오류");
+            }
+
+            pendingFood = await response.json();
+            statusP.innerText = "✅ AI 식단 분석 결과";
+
+            pendingFood.items.forEach(item => {
+                itemsList.innerHTML += `
+                    <div class="flex justify-between border-b border-gray-100 pb-1.5">
+                        <span class="font-semibold text-gray-700">📍 ${item.name}</span>
+                        <span class="text-xs text-gray-500">${item.cal} kcal (탄 ${item.carb}g | 단 ${item.prot}g | 지 ${item.fat}g)</span>
+                    </div>`;
+            });
+
+            feedbackBox.innerText = `📋 영양사 강평: ${pendingFood.feedback}`;
+            feedbackBox.classList.remove('hidden');
+
+            document.getElementById('food-cal').innerText = pendingFood.total.cal;
+            document.getElementById('food-carb').innerText = pendingFood.total.carb;
+            document.getElementById('food-prot').innerText = pendingFood.total.prot;
+            document.getElementById('food-fat').innerText = pendingFood.total.fat;
+            
+            totalSection.classList.remove('hidden');
+
+        } catch (error) {
+            console.error(error);
+            statusP.innerText = "❌ 분석 실패. 다시 시도해주세요.";
+        }
+    }
+
+    async function addFoodToTotal() {
+        if (!pendingFood || !pendingFood.total) return;
+        
+        try {
+            const response = await fetch("http://172.16.145.17:8000/api/logs", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    items: pendingFood.items,
+                    total: pendingFood.total,
+                    image_filename: pendingFood.image_filename,
+                    feedback: pendingFood.feedback
+                })
+            });
+
+            if (!response.ok) throw new Error();
+            
+            document.getElementById('analysis-result').classList.add('hidden');
+            pendingFood = null;
+            await loadHistory();
+            alert("식단로그 저장 및 오늘 누적 섭취량이 동기화되었습니다.");
+        } catch (error) {
+            alert("로그 저장에 실패했습니다.");
+        }
+    }
+
+    function togglePasswordPanel() {
+        const panel = document.getElementById("password-panel");
+        const arrow = document.getElementById("panel-arrow");
+        if (panel.classList.contains("hidden")) {
+            panel.classList.remove("hidden");
+            arrow.innerText = "▲";
+        } else {
+            panel.classList.add("hidden");
+            arrow.innerText = "▼";
+        }
+    }
+
+    async function changeUserPassword() {
+        const current_password = document.getElementById("user-current-password").value;
+        const new_password = document.getElementById("user-new-password").value;
+
+        if (!current_password || !new_password) return alert("비밀번호를 모두 입력하세요.");
+
+        try {
+            const response = await fetch("http://172.16.145.17:8000/api/user/change-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ current_password, new_password })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail);
+            }
+
+            alert("비밀번호가 성공적으로 변경되었습니다.");
+            document.getElementById("user-current-password").value = "";
+            document.getElementById("user-new-password").value = "";
+            togglePasswordPanel();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        location.href = "index.html";
+    }
+
+    loadHistory();
+</script>
+
+</body>
+</html>
