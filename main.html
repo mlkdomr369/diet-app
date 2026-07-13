@@ -242,6 +242,11 @@
     let pendingFood = null;
 
     function calculateLocalGoals(gender, age, height, weight) {
+        gender = gender || 'male';
+        age = parseInt(age) || 25;
+        height = parseInt(height) || 175;
+        weight = parseInt(weight) || 70;
+
         let bmr = (10 * weight) + (6.25 * height) - (5 * age);
         bmr += (gender === 'male') ? 5 : -161;
 
@@ -288,10 +293,10 @@
             if (!response.ok) throw new Error();
             const data = await response.json();
 
-            document.getElementById('gender').value = data.gender;
-            document.getElementById('age').value = data.age;
-            document.getElementById('height').value = data.height;
-            document.getElementById('weight').value = data.weight;
+            document.getElementById('gender').value = data.gender || 'male';
+            document.getElementById('age').value = data.age || 25;
+            document.getElementById('height').value = data.height || 175;
+            document.getElementById('weight').value = data.weight || 70;
 
             calculateLocalGoals(data.gender, data.age, data.height, data.weight);
         } catch (error) {
@@ -332,14 +337,16 @@
             let todayCal = 0, todayCarb = 0, todayProt = 0, todayFat = 0;
             const todayStr = new Date().toISOString().split('T')[0];
 
-            logs.forEach((log, index) => {
+            logs.forEach(log => {
                 if(log.date === todayStr) {
                     todayCal += log.cal;
                     todayCarb += log.carb;
                     todayProt += log.prot;
                     todayFat += log.fat;
                 }
+            });
 
+            logs.forEach((log, index) => {
                 let itemsNames = log.items.map(i => i.name).join(", ");
                 container.innerHTML += `
                     <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl space-y-3">
