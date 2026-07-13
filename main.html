@@ -317,6 +317,15 @@
         updateBar('fat', current.fat, goals.fat);
     }
 
+    // 타임존 문제 해결 로직
+    function getLocalTodayString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     async function loadHistory() {
         try {
             const response = await fetch("https://sri-residence-discrimination-california.trycloudflare.com/api/logs", {
@@ -335,7 +344,7 @@
             }
 
             let todayCal = 0, todayCarb = 0, todayProt = 0, todayFat = 0;
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getLocalTodayString(); // 수정된 로컬 타임 적용
 
             logs.forEach(log => {
                 if(log.date === todayStr) {
